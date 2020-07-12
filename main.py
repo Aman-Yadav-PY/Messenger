@@ -1,11 +1,13 @@
-import socket
-import tkinter as tk
-import time
-import csv
 from tkcalendar import Calendar
 from client import client
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
+from data_center import database, data
+import socket
+import tkinter as tk
+import time
+import csv
+
 
 
 class messenger:
@@ -16,7 +18,8 @@ class messenger:
 		self.notebook = ttk.Notebook(self.master)
 		self.notebook.place(relx=0.018, rely=0.02, relheight=0.97, relwidth=0.97)
 
-		self.fieldnames = ['Name', 'Email','gender', 'age', 'birthdate', 'password']
+		self.Database = database('User data.db')
+		self.Database.initialize()
 
 	# login window
 	def first_tab(self):
@@ -114,13 +117,11 @@ class messenger:
 				if self.password.get() == self.cpassword.get():
 					self.passcode = str(self.cpassword.get())
 					self.info = {'Name':self.username , 'Email':self.email_id, 'gender':self.gender.get(), 'age':self.age, 'birthdate':self.DOB, 'password':self.passcode}
-					with open('user_data.csv', 'a') as csvfile:
-						writer = csv.DictWriter(csvfile, fieldnames = self.fieldnames)
-						# writer.writeheader()
-						writer.writerow(self.info)
+					D = data(self.username, self.email_id, self.gender.get(), self.age, self.DOB, self.passcode)
+					self.Database.insert_data(D)
 
 					self.name.config(takefocus=True)
-					self.top.destroy()
+					self.Top.destroy()
 
 				else:
 					messagebox.showwarning(message='retype your password')
@@ -136,39 +137,47 @@ class messenger:
 
 
 		def login():
-			with open('user_data.csv') as csvfile:
-				reader = csv.DictReader(csvfile)
-				self.user = self.entry_login.get()
-				password = self.entry_password.get()
+		
+			self.user = self.entry_login.get()
+			password = self.entry_password.get()
 
-				for data in reader:
-					if self.user == data['Name'] or data['Email']:
-						content = data
+			data = self.Database.fetcher(self.user)
 
-						if data['password'] == password:
+			try:
+				if self.user == data[0] or data[1]:
+					if data[-1] == password:
 
+						try:
 							self.activator = client('127.0.0.1', 5050, self.label_messaging)
-							self.activator.connector(data['Name'])							
+							self.activator.connector(data[0])
+
+
 							self.notebook.select(self.all_tabs[1])
 
-							if data['gender'] == 'Male':
+							if data[2] == 'Male':
 								self.user_img = ImageTk.PhotoImage(Image.open(r'E:\neural networking\Projects\massenger\pics\USER.ico'))
 							else:
 								self.user_img = ImageTk.PhotoImage(Image.open(r'E:\neural networking\Projects\massenger\pics\USER1.ico'))
 
 							self.canvas.create_image(100, 40, image=self.user_img)
-							self.canvas.create_text(170, 40, text=data['Name'])
+							self.canvas.create_text(170, 40, text=data[0])
 
-
-						else:
-							self.entry_password.config(background='red')
-							self.entry_password.delete(0, len(self.entry_password.get()))
+							self.label_conn.config(image = self.user_img)
+						
+						except:
+							messagebox.showwarning('Connection Error', message = 'Connect to Internet.')
 
 					else:
-						self.entry_login.config(background='red')
-						self.entry_login.delete(0, len(self.entry_login.get()))
+						self.entry_password.config(background='red')
+						self.entry_password.delete(0, len(self.entry_password.get()))
+			except Exception as e:
+				print(e)
 
-				
+			else:
+				self.entry_login.config(background='red')
+				self.entry_login.delete(0, len(self.entry_login.get()))
+
+		
 				
 
 		self.loginbtn = ttk.Button(self.frame, text='Login', command=login)
@@ -193,6 +202,9 @@ class messenger:
 
 		self.frame2 = tk.Frame(self.main_frame, background='green', relief='sunken')
 		self.frame2.place(relx=0, rely=0.18, relheight=0.8, relwidth=1)
+
+		self.label_conn = tk.Label(self.frame2, text='You are not connected to Internet!', font=35)
+		self.label_conn.pack()
 
 
 		self.notebook.add(self.main_frame, text='Contact')
@@ -223,8 +235,6 @@ class messenger:
 		self.entry2 = ttk.Entry(self.frame2)
 		# self.entry2.pack()
 
-		msg_recv = self.activator.reciever()
-		self.label.config(text=msg_recv)
 		def activate_code():
 			msg = self.activator.info_exchanger(self.entry.get())
 			self.label_messaging.config(text = msg)
