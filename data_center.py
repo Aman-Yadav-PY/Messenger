@@ -36,23 +36,26 @@ class database:
 		return self.retrived_data
 
 if __name__ == '__main__':
-	db = database(":memory:")
-	db.initialize()
-	class data:
-		def __init__(self, name, email, gender, age, birthday, password):
-			self.name = name
-			self.email = email
-			self.gender = gender
-			self.age = age
-			self.birthday = birthday
-			self.password = password
-	user1 = data('Aman', 'aman1234@gmail.com', 'male', 17, '20 April 2003', '1234')
-	user2 = data('Kuldeep', 'kuldeep2032004@gmail.com', 'male', 17, '20 March 2003', '12345')
+	def test():
+		db = database(":memory:")
+		db.initialize()
+		class data:
+			def __init__(self, name, email, gender, age, birthday, password):
+				self.name = name
+				self.email = email
+				self.gender = gender
+				self.age = age
+				self.birthday = birthday
+				self.password = password
+		user1 = data('Aman', 'aman1234@gmail.com', 'male', 17, '20 April 2003', '1234')
+		user2 = data('Kuldeep', 'kuldeep2032004@gmail.com', 'male', 17, '20 March 2003', '12345')
 
-	db.insert_data(user1)
-	db.insert_data(user2)
+		db.insert_data(user1)
+		db.insert_data(user2)
 
-	print(db.fetcher('Kuldeep Yadav'))
+		print(db.fetcher('Kuldeep Yadav'))
+		
+	test()
 
 
 
